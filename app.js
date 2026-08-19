@@ -7,13 +7,17 @@
     return;
   }
 
-  const STORAGE_KEY = "smartmanteau-settings-v1";
+  const STORAGE_KEY = "smartmanteau-settings-v2";
   const form = document.getElementById("generator-form");
   const resultsRegion = document.getElementById("results");
   const resultsSummary = document.getElementById("results-summary");
   const warningBox = document.getElementById("warning-box");
   const liveRegion = document.getElementById("live-region");
   const themeToggle = document.getElementById("theme-toggle");
+  const generatorTab = document.getElementById("generator-tab");
+  const soundsTab = document.getElementById("sounds-tab");
+  const generatorPanel = document.getElementById("generator-panel");
+  const soundsPanel = document.getElementById("sounds-panel");
   const manipulationToggle = document.getElementById("allow-manipulation");
   const manipulationOptions = document.getElementById("manipulation-options");
   const copyAllButton = document.getElementById("copy-all");
@@ -110,8 +114,22 @@
     const normalized = theme === "dark" ? "dark" : "light";
     document.documentElement.dataset.theme = normalized;
     const isDark = normalized === "dark";
+    const label = isDark ? "Switch to light mode" : "Switch to dark mode";
     themeToggle.setAttribute("aria-pressed", String(isDark));
-    themeToggle.textContent = isDark ? "Use light mode" : "Use dark mode";
+    themeToggle.setAttribute("aria-label", label);
+    themeToggle.setAttribute("title", label);
+    themeToggle.innerHTML = `<span class="theme-icon" aria-hidden="true">${isDark ? "☀" : "☾"}</span>`;
+  }
+
+  function activateTab(tabName, moveFocus) {
+    const showSounds = tabName === "sounds";
+    generatorPanel.hidden = showSounds;
+    soundsPanel.hidden = !showSounds;
+    generatorTab.classList.toggle("active", !showSounds);
+    soundsTab.classList.toggle("active", showSounds);
+    generatorTab.setAttribute("aria-selected", String(!showSounds));
+    soundsTab.setAttribute("aria-selected", String(showSounds));
+    if (moveFocus) (showSounds ? soundsTab : generatorTab).focus();
   }
 
   function savePreferences() {
@@ -144,11 +162,11 @@
         if (field.type === "checkbox") field.checked = Boolean(saved[id]);
         else field.value = String(saved[id]);
       });
-      setTheme(saved.theme);
+      setTheme(saved.theme || "light");
     } else {
-      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setTheme(prefersDark ? "dark" : "light");
+      setTheme("light");
     }
+    activateTab("generator", false);
     updateManipulationState();
   }
 
@@ -489,6 +507,18 @@
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     setTheme(next);
     savePreferences();
+  });
+
+  generatorTab.addEventListener("click", () => activateTab("generator", false));
+  soundsTab.addEventListener("click", () => activateTab("sounds", false));
+
+  [generatorTab, soundsTab].forEach((tab) => {
+    tab.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      const next = tab === generatorTab ? soundsTab : generatorTab;
+      activateTab(next === soundsTab ? "sounds" : "generator", true);
+    });
   });
 
   manipulationToggle.addEventListener("change", () => {
