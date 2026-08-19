@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Smartmanteau is a deterministic, offline, phonology-aware portmanteau generator.">
+  <title>Smartmanteau</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to the generator</a>
+
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">Offline phonetic word blending</p>
+      <h1>Smartmanteau</h1>
+      <p class="tagline">Blend names and words by syllables, stress, sound patterns, overlaps, and optional phonological manipulation—without AI or web access.</p>
+    </div>
+    <button id="theme-toggle" class="secondary-button" type="button" aria-pressed="false">Use dark mode</button>
+  </header>
+
+  <main id="main-content" class="page-shell">
+    <form id="generator-form" novalidate>
+      <section class="panel" aria-labelledby="words-heading">
+        <div class="section-heading-row">
+          <div>
+            <h2 id="words-heading">1. Enter two words</h2>
+            <p>Guides are optional, but they make stress-aware results much more reliable.</p>
+          </div>
+        </div>
+
+        <div class="word-grid">
+          <fieldset class="word-card">
+            <legend>Word A</legend>
+            <label for="word-a">Word or name</label>
+            <input id="word-a" name="wordA" type="text" autocomplete="off" spellcheck="false" placeholder="Jonathan" required>
+
+            <label for="guide-a">Syllable guide</label>
+            <input id="guide-a" name="guideA" type="text" autocomplete="off" spellcheck="false" placeholder="Jon-a-than" aria-describedby="guide-a-help">
+            <p id="guide-a-help" class="field-help">Use hyphens and keep the same spelling.</p>
+
+            <label for="stress-a">Primary stress syllable</label>
+            <input id="stress-a" name="stressA" type="number" inputmode="numeric" min="1" value="1" aria-describedby="stress-a-help">
+            <p id="stress-a-help" class="field-help">1 means the first syllable, 2 means the second, and so on.</p>
+          </fieldset>
+
+          <fieldset class="word-card">
+            <legend>Word B</legend>
+            <label for="word-b">Word or name</label>
+            <input id="word-b" name="wordB" type="text" autocomplete="off" spellcheck="false" placeholder="Doris" required>
+
+            <label for="guide-b">Syllable guide</label>
+            <input id="guide-b" name="guideB" type="text" autocomplete="off" spellcheck="false" placeholder="Dor-is" aria-describedby="guide-b-help">
+            <p id="guide-b-help" class="field-help">Use hyphens and keep the same spelling.</p>
+
+            <label for="stress-b">Primary stress syllable</label>
+            <input id="stress-b" name="stressB" type="number" inputmode="numeric" min="1" value="1" aria-describedby="stress-b-help">
+            <p id="stress-b-help" class="field-help">This helps Smartmanteau decide which blends belong near the top.</p>
+          </fieldset>
+        </div>
+
+        <div class="example-row" aria-label="Load an example">
+          <span>Examples:</span>
+          <button class="example-button" type="button" data-example="jonathan">Jonathan + Doris</button>
+          <button class="example-button" type="button" data-example="sierra">Sierra + Everett</button>
+          <button class="example-button" type="button" data-example="joe">Joe + George</button>
+          <button class="example-button" type="button" data-example="nocturne">Nocturne + Daylia</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="priority-heading">
+        <h2 id="priority-heading">2. Choose what gets prioritized</h2>
+        <p>These controls move blends between Best, Good, and Other. They do not make a blend illegal.</p>
+
+        <div class="settings-grid">
+          <div>
+            <label for="priority">Put this first</label>
+            <select id="priority" name="priority">
+              <option value="flow">Natural syllable flow</option>
+              <option value="balance">Fair contribution</option>
+              <option value="stress">Original stress</option>
+              <option value="recognition">Recognizable source words</option>
+              <option value="compact">Short, compact blends</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="balance">Contribution fairness</label>
+            <select id="balance" name="balance">
+              <option value="loose">Loose</option>
+              <option value="moderate" selected>Moderate</option>
+              <option value="strong">Strong</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="toggle-row" for="prioritize-stress">
+          <input id="prioritize-stress" name="prioritizeStress" type="checkbox" checked>
+          <span>
+            <strong>Prefer at least one stable stressed syllable in Best outcomes</strong>
+            <small>A stress chunk can survive but still be demoted when the new boundary probably shifts its emphasis.</small>
+          </span>
+        </label>
+      </section>
+
+      <section class="panel" aria-labelledby="manipulation-heading">
+        <h2 id="manipulation-heading">3. Add manipulated blends</h2>
+        <p>Turning this on adds extra generation paths. Literal substring blends stay in the output either way.</p>
+
+        <label class="toggle-row major-toggle" for="allow-manipulation">
+          <input id="allow-manipulation" name="allowManipulation" type="checkbox" checked>
+          <span>
+            <strong>Allow phonological manipulation</strong>
+            <small>Permit careful deletion, mixing, reordering, and compatible-sound bridges.</small>
+          </span>
+        </label>
+
+        <div id="manipulation-options" class="suboptions">
+          <label class="toggle-row" for="allow-deletion">
+            <input id="allow-deletion" name="allowDeletion" type="checkbox" checked>
+            <span><strong>Drop unstressed or light material</strong><small>Examples include removing the unstressed “a” that can help create Jonthoris.</small></span>
+          </label>
+
+          <label class="toggle-row" for="allow-metathesis">
+            <input id="allow-metathesis" name="allowMetathesis" type="checkbox" checked>
+            <span><strong>Allow metathesis</strong><small>Swap nearby sounds when the resulting sequence remains legal, such as dor → dro.</small></span>
+          </label>
+
+          <label class="toggle-row" for="allow-equivalent">
+            <input id="allow-equivalent" name="allowEquivalentSounds" type="checkbox" checked>
+            <span><strong>Use compatible sound groups at joins</strong><small>Different spellings may connect only when you place them in the same custom group.</small></span>
+          </label>
+
+          <label class="toggle-row" for="allow-compression">
+            <input id="allow-compression" name="allowCompression" type="checkbox" checked>
+            <span><strong>Compress shared or repeated boundaries</strong><small>Collapse exact overlaps and avoid results such as Sierrrett when a cleaner join exists.</small></span>
+          </label>
+        </div>
+      </section>
+
+      <details class="panel advanced-panel" id="advanced-settings">
+        <summary>4. Customize the phonology</summary>
+        <p class="details-intro">The starter values are editable. Smartmanteau treats your rules as the authority instead of pretending one English template fits every language.</p>
+
+        <div class="advanced-grid">
+          <div>
+            <label for="vowels">Vowel units</label>
+            <textarea id="vowels" name="vowels" rows="3" spellcheck="false"></textarea>
+            <p class="field-help">Separate units with commas. Add accented vowels here when needed.</p>
+          </div>
+
+          <div>
+            <label for="vowel-clusters">Vowel clusters and diphthongs</label>
+            <textarea id="vowel-clusters" name="vowelClusters" rows="4" spellcheck="false"></textarea>
+            <p class="field-help">A listed cluster stays together during tokenization.</p>
+          </div>
+
+          <div>
+            <label for="consonant-clusters">Consonant clusters and digraphs</label>
+            <textarea id="consonant-clusters" name="consonantClusters" rows="4" spellcheck="false"></textarea>
+            <p class="field-help">Examples: th, sh, ch, str. Longest clusters are matched first.</p>
+          </div>
+
+          <div>
+            <label for="allowed-shapes">Allowed syllable shapes</label>
+            <textarea id="allowed-shapes" name="allowedShapes" rows="4" spellcheck="false"></textarea>
+            <p class="field-help">Use C and V patterns such as CV, CVC, CCV, or CVVC.</p>
+          </div>
+
+          <div class="wide-field">
+            <label for="equivalence-groups">Compatible sound or spelling groups</label>
+            <textarea id="equivalence-groups" name="equivalenceGroups" rows="6" spellcheck="false" aria-describedby="equivalence-help"></textarea>
+            <p id="equivalence-help" class="field-help">One group per line. A label is optional. Examples: <code>Long E = ee/ea/i</code> or <code>O bridge = o/au/aw</code>. Brackets are also accepted.</p>
+          </div>
+
+          <div class="wide-field">
+            <label for="sound-classes">Optional natural sound classes</label>
+            <textarea id="sound-classes" name="soundClasses" rows="4" spellcheck="false"></textarea>
+            <p class="field-help">Examples: <code>Nasal = m/n/ng</code> and <code>Liquid = l/r</code>. These help decide which nearby sounds may reorder cleanly.</p>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="reset-phonology" class="secondary-button" type="button">Reset starter phonology</button>
+        </div>
+      </details>
+
+      <div class="generate-bar">
+        <button id="generate-button" class="generate-button" type="submit">Generate portmanteaus</button>
+        <button id="clear-button" class="secondary-button" type="button">Clear results</button>
+      </div>
+    </form>
+
+    <section id="results" class="results-region" aria-labelledby="results-heading" hidden>
+      <div class="results-title-row">
+        <div>
+          <p class="eyebrow">Prioritized, not numerically scored</p>
+          <h2 id="results-heading">Smartmanteau results</h2>
+          <p id="results-summary"></p>
+        </div>
+        <button id="copy-all" class="secondary-button" type="button">Copy visible results</button>
+      </div>
+
+      <div id="warning-box" class="warning-box" role="status" hidden></div>
+
+      <div class="result-controls" aria-label="Filter generated blends">
+        <div class="filter-field">
+          <label for="result-search">Find a generated blend</label>
+          <input id="result-search" type="search" autocomplete="off" spellcheck="false" placeholder="Try dronathan or a sound fragment">
+        </div>
+        <div class="filter-field">
+          <label for="process-filter">Generation path</label>
+          <select id="process-filter">
+            <option value="all">All generation paths</option>
+            <option value="literal">Literal splices</option>
+            <option value="overlap">Shared overlaps</option>
+            <option value="deletion">Dropped material</option>
+            <option value="metathesis">Metathesis</option>
+            <option value="sound">Compatible sound groups</option>
+          </select>
+        </div>
+        <button id="reset-result-filters" class="secondary-button" type="button">Reset result filters</button>
+      </div>
+      <p id="filter-summary" class="filter-summary" role="status"></p>
+
+      <section class="result-section" aria-labelledby="best-heading">
+        <div class="section-toolbar">
+          <div>
+            <h3 id="best-heading">Best outcomes</h3>
+            <p>These fit the current priorities most closely.</p>
+          </div>
+          <p id="best-count" class="section-count"></p>
+        </div>
+        <div id="best-results" class="result-grid"></div>
+        <button id="show-more-best" class="secondary-button show-more-button" type="button">Show more Best outcomes</button>
+      </section>
+
+      <section class="result-section" aria-labelledby="good-heading">
+        <div class="section-toolbar">
+          <div>
+            <h3 id="good-heading">Good outcomes</h3>
+            <p>These still work, but one or more current preferences are weaker.</p>
+          </div>
+          <p id="good-count" class="section-count"></p>
+        </div>
+        <div id="good-results" class="result-grid"></div>
+        <button id="show-more-good" class="secondary-button show-more-button" type="button">Show more Good outcomes</button>
+      </section>
+
+      <details class="result-section other-results" open>
+        <summary id="other-heading">Other legal blends</summary>
+        <div class="section-toolbar compact-toolbar">
+          <p>These are allowed by the current generation rules, even when they are less fair, less recognizable, or less smooth.</p>
+          <p id="other-count" class="section-count"></p>
+        </div>
+        <div id="other-results" class="result-grid"></div>
+        <button id="show-more-other" class="secondary-button show-more-button" type="button">Show more Other blends</button>
+      </details>
+    </section>
+
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <footer class="site-footer">
+    <p>Smartmanteau runs entirely in this browser. It sends no words, settings, or results anywhere.</p>
+  </footer>
+
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
